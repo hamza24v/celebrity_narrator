@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CameraComponent from './components/CameraComponent';
 import { uploadImage, getAnalysis } from './services/narratorService';
-import './index.css'; // Ensure Tailwind CSS is imported
+import './index.css'; 
 
 const App = () => {
   const [narration, setNarration] = useState(null);
