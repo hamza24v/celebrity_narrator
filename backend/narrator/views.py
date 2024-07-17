@@ -1,4 +1,5 @@
-from rest_framework import viewsets, status
+import errno
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -11,6 +12,8 @@ from elevenlabs.client import ElevenLabs
 import base64
 import os  
 import time
+import io
+from PIL import Image
 
 load_dotenv()
 
@@ -27,11 +30,14 @@ class NarrationViewSet(viewsets.ModelViewSet):
     serializer_class = NarrationSerializer
     parser_classes = (MultiPartParser, FormParser)
 
-    def encode_image(self, image_path):
+    def encode_image(self, image_path, quality=50):
         while True:
             try:
-                with open(image_path, "rb") as image_file:
-                    return base64.b64encode(image_file.read()).decode("utf-8")
+                with Image.open(image_path) as image_file:
+                    image_file = image_file.convert("RGB")
+                    buffer = io.BytesIO()
+                    image_file.save(buffer, format="JPEG", quality=quality)
+                    return base64.b64encode(buffer.getvalue()).decode("utf-8")
             except IOError as e:
                 if e.errno != errno.EACCES:
                     raise
@@ -55,55 +61,39 @@ class NarrationViewSet(viewsets.ModelViewSet):
             f.write(audio)
         return file_path
 
-    def analyze_image(self, base64_image, script):
-        retry_attempts = 3
-        for attempt in range(retry_attempts):
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": """
-                            You are Sir David Attenborough. Narrate the picture of the human as if it is a nature documentary.
-                            Make it snarky and funny. Don't repeat yourself. Make it short. If I do anything remotely interesting, make a big deal about it!
-                            """,
-                        },
-                    ]
-                    + script,
-                    max_tokens=500,
-                )
-                response_text = response.choices[0].message['content']
-                return response_text
-            except client.chat.error.RateLimitError as e:
-                if attempt < retry_attempts - 1:
-                    print(f"Rate limit exceeded, retrying in {2 ** attempt} seconds...")
-                    time.sleep(2 ** attempt)  # Exponential backoff
-                else:
-                    raise
+    def analyze_image(self, base64_image):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo-0125",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """
+                        You are Sir David Attenborough. Narrate the picture of the human as if it is a nature documentary.
+                        Make it snarky and funny. Don't repeat yourself. Make it short. If I do anything remotely interesting, make a big deal about it!
+                        """,
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Describe this image: data:image/jpeg;base64,{base64_image}"
+                    }
+                ],
+                max_tokens=500,
+            )
+            return response.choices[0].message.content
+        except Exception as err:
+            error = f"API Error: {str(err)}"
+            return error 
 
 
     @action(detail=True, methods=['post'])
     def process_image(self, request, pk=None):
-        print("Request Data:", request.data)
         narration = self.get_object()
         image_path = narration.image.path
 
-        
-        base64_image = self.encode_image(image_path)
+        base64_image = self.encode_image(image_path, quality=50)
         print("Base64 Image:", base64_image[:100])
-        
-        script = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Describe this image"},
-                    {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"},
-                ],
-            },
-        ]
-
-        analysis = self.analyze_image(base64_image, script=script)
+        analysis = self.analyze_image(base64_image)
         print("Analysis:", analysis)
 
         narration.analysis = analysis # Save analysis to model
