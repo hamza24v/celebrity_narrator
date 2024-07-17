@@ -18,8 +18,8 @@ const App = () => {
   };
 
   return (
-    <div className="mx-auto p-4">
-    <h1 className="text-3xl font-bold text-center my-4">Narrator</h1>
+    <div className="flex flex-col h-screen justify-center items-center">
+    <h1 className="text-4xl font-bold text-center mb-10">Celebrity Narrator</h1>
     <CameraComponent onCapture={handleCapture} />
     {narration && (
       <div className="analysis-result mt-4 p-4 border rounded bg-gray-100">

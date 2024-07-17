@@ -7,8 +7,12 @@ const CameraComponent = ({ onCapture }) => {
 
   useEffect(() => {
     async function getMedia() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoRef.current.srcObject = stream;
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+      }
     }
 
     getMedia();
@@ -18,9 +22,12 @@ const CameraComponent = ({ onCapture }) => {
     const id = setInterval(() => {
       const context = canvasRef.current.getContext('2d');
       context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      const dataUrl = canvasRef.current.toDataURL('image/jpeg');
-      onCapture(dataUrl);
-    }, 5000); 
+      canvasRef.current.toBlob(blob => {
+        const file = new File([blob], 'image.png', { type: 'image/jpeg' })
+        console.log("Captured file:", file);
+        onCapture(file);
+      }, 'image/jpeg');
+    }, 5000);
     setIntervalId(id);
   };
 
@@ -30,7 +37,7 @@ const CameraComponent = ({ onCapture }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <video ref={videoRef} autoPlay className="w-full h-96 bg-gray-200"></video>
+      <video ref={videoRef} autoPlay className="w-full h-96"></video>
       <canvas ref={canvasRef} width="640" height="480" className="hidden"></canvas>
       <div className="mt-4">
         <button onClick={startCapturing} className=" bg-blue-500 text-white px-4 py-2 rounded mr-2">

@@ -5,3 +5,6 @@ class NarrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Narration
         fields = '__all__'
+        extra_kwargs = {
+            'analysis': {'required': False},
+        }
