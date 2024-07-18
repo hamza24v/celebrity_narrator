@@ -1,4 +1,4 @@
-import errno, os, time, uuid, openai, tiktoken, io, base64
+import errno, os, time, uuid, openai, tiktoken, io, base64, threading
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -23,6 +23,15 @@ client = OpenAI(
 )
 
 encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+
+# used to delete image and audio file path after client recieves and plays narration
+# So rest assured if you're concerned about face pic being stored 
+def delete_file(file_path):
+    try:
+        os.remove(file_path)
+        print(f"{file_path} has been deleted.")
+    except Exception as e:
+        print(f"Error deleting file {file_path}: {e}")
 
 class NarrationViewSet(viewsets.ModelViewSet):
     queryset = Narration.objects.all()
@@ -66,6 +75,9 @@ class NarrationViewSet(viewsets.ModelViewSet):
                         f.write(chunk)
 
             audio_url = request.build_absolute_uri(f'{settings.MEDIA_URL}audio/{file_name}')
+
+            threading.Timer(30.0, delete_file, [file_path]).start()  # deletes audio after 30 seconds
+
             return {'success': True, 'audio_url': audio_url}
         except Exception as err:
             error = {"success": False, "errorFrom": "Eleven labs API", 'message': str(err)}
@@ -79,13 +91,13 @@ class NarrationViewSet(viewsets.ModelViewSet):
                 {
                     "role": "system",
                     "content": """
-                    You are Sir David Attenborough. Narrate the images that is sent to you as if it is a nature documentary.
+                    You are Sir David Attenborough. Narrate the person in the image as if it is a nature documentary.
                     Make it snarky, funny and short. Don't repeat yourself. If I do anything remotely interesting, make a big deal about it!
                     """,
                 },
                 {
                     "role": "user",
-                    "content": f"Narrate the person in this picture: data:image/jpeg;base64,{base64_image}"
+                    "content": f"Describe the following person in detail: data:image/jpeg;base64,{base64_image}"
                 }
             ]
             token_count = sum(len(encoding.encode(message['content'])) for message in messages) # counts number of tokens
@@ -93,7 +105,11 @@ class NarrationViewSet(viewsets.ModelViewSet):
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=messages,
-                max_tokens=500,
+                max_tokens=700,
+                temperature=0.7,
+                top_p=1,
+                frequency_penalty=0.5,
+                presence_penalty=0.5
             )
             return {"success": True, 'content': response.choices[0].message.content}
         except openai.APIError as err:
@@ -120,6 +136,7 @@ class NarrationViewSet(viewsets.ModelViewSet):
         narration.analysis = analysis['content']  # saving analysis to model
         narration.save()
 
+        print("Analysis: ", analysis)
         # generating and saving audio file
         audio = self.play_audio(analysis['content'], request)
         if audio['success']:
@@ -127,6 +144,7 @@ class NarrationViewSet(viewsets.ModelViewSet):
         else:
             return Response(audio, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         print("Audio file url: ", audio_url)
+        threading.Timer(30.0, delete_file, [image_path]).start()  # deletes image after 30 seconds
 
         return Response({'status': 'processed', 'analysis': analysis['content'], 'audio_file': audio_url})
 

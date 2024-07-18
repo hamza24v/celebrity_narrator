@@ -10,7 +10,8 @@ import ReplayIcon from '@mui/icons-material/Replay';
 const App = () => {
   const [narration, setNarration] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const audioRef = useRef(new Audio());
 
   useEffect(() => {
     setShowModal(true);
@@ -24,6 +25,7 @@ const App = () => {
       const analysisResponse = await getAnalysis(id);
       setNarration(analysisResponse.data);
       audioRef.current.src = analysisResponse.data.audio_file // loads audio file
+      analysisResponse.data.audio_file
     } catch (error) {
       console.error('Error capturing or analyzing image:', error);
     } finally {
@@ -56,9 +58,9 @@ const App = () => {
         <h1 className="my-5 text-4xl font-bold leading-[1.15] text-black sm:text-5xl text-center;">
           David Attenborough <span className='orange_gradient'>Narrates!</span></h1>
         <CameraComponent onCapture={handleCapture} />
-        <div className='my-10 max-w-full flex justify-center items-center'>
+        <div className='max-w-full flex justify-center items-center'>
           {isLoading ? (
-            <img src='./src/assets/loader.svg' alt='loader' className='size-20 object-contain' />
+            <img src='./src/assets/loader.svg' alt='loader' className='my-20 size-20 object-contain' />
           ) :
             (
               narration && (
