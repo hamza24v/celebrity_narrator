@@ -4,9 +4,11 @@
 
 **David Narrates** is an innovative web application designed to provide a unique and engaging experience by narrating user-uploaded images in the iconic style of Sir David Attenborough. The application uses advanced AI technologies to analyze images and generate humorous and insightful narrations, bringing the images to life with a touch of personality and wit.
 
+**Live link**: [David Narrates](https://dqsonwlvmbxv9.cloudfront.net/index.html)
+
 ## Features
 
-- **Image Upload**: Users can upload images directly from their device.
+- **Image capture**: Users can take screenshots from their device (desktop/phone) which is then uploaded to backend. snapshots will be deleted after processing...so rest assured.
 - **AI-Powered Narration**: Utilizes OpenAI's GPT-4o-mini to generate narrations based on the uploaded images.
 - **Real-time Feedback**: Provides instant audio feedback with the generated narration.
 - **Secure and Scalable**: Deployed on AWS, leveraging EC2, S3, and CloudFront for robust performance and security.
@@ -32,7 +34,7 @@
 ## How to Use
 
 1. **Access the Application**: Navigate to the deployed application URL.
-2. **Upload an Image**: Click the 'Upload' button to select an image from your device.
+2. **Take a snapshot**: Click the 'Take a snapshot to narrate' button to take screen shot.
 3. **Generate Narration**: Once the image is uploaded, the application will process it and generate a narration.
 4. **Listen to the Narration**: Click the 'Play' button to hear the narration in the voice of Sir David Attenborough.
 
@@ -111,9 +113,3 @@
 
 1. **Create an S3 Bucket**: In the AWS Management Console, create an S3 bucket and upload your frontend build files.
 2. **Set Up CloudFront**: Create a CloudFront distribution pointing to your S3 bucket to serve your frontend content globally.
-
-### Conclusion
-
-**David Narrates** combines cutting-edge AI technologies with a delightful user experience to bring images to life through narration. The project demonstrates proficiency in modern web development, cloud deployment, and AI integration, making it a standout addition to any portfolio.
-
-By following the setup instructions, you can get the application up and running locally or on AWS, showcasing your ability to deploy and manage full-stack applications in a professional environment.
