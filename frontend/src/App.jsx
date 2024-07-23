@@ -58,9 +58,8 @@ const App = () => {
         <h1 className="my-5 text-4xl font-bold leading-[1.15] text-black sm:text-5xl text-center;">
           David Attenborough <span className='orange_gradient'>Narrates!</span></h1>
         <CameraComponent onCapture={handleCapture} />
-        <div className='max-w-full flex justify-center items-center'>
           {isLoading ? (
-            <img src='./src/assets/loader.svg' alt='loader' className='my-20 size-20 object-contain' />
+            <img src='./src/assets/loader.svg' alt='loader' className='size-20 object-contain' />
           ) :
             (
               narration && (
@@ -83,7 +82,6 @@ const App = () => {
                   </div>
                 </div>
               ))}
-        </div>
         <Modal showModal={showModal} setShowModal={setShowModal} />
       </div>
     </main>

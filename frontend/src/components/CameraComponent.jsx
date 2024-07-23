@@ -40,10 +40,10 @@ const CameraComponent = ({ onCapture }) => {
 
 
   return (
-    <div className="flex flex-col items-center">
-      <video ref={videoRef} autoPlay className="w-full h-96"></video>
+    <div className="mb-5 flex flex-col items-center">
+      <video ref={videoRef} autoPlay className="w-full"></video>
       <canvas ref={canvasRef} width="640" height="480" className="hidden"></canvas>
-      <button onClick={takeSnapshot} className=" bg-orange-400  px-4 py-2 rounded mr-2 mt-5 text-lg text-gray-200 sm:text-xl text-center max-w-2xl">
+      <button onClick={takeSnapshot} className=" bg-orange-400  px-4 py-2 rounded mr-2 mt-5 text-lg  sm:text-xl text-center max-w-2xl">
         Take a snapshot to narrate
       </button>
       {flash && <div className="absolute top-0 left-0 w-full h-full bg-white opacity-50 animate-flash"></div>}
